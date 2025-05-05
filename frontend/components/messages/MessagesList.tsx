@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   useGetMessagesQuery,
-  useUpdateMessageMutation,
   useDeleteMessageMutation,
 } from "@features/messages/messagesApi";
 import {
@@ -16,19 +15,17 @@ import {
 } from "@components/ui/table";
 import { Spinner } from "@components/ui/spinner";
 import { Button } from "@components/ui/button";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@components/ui/dialog";
-import { Textarea } from "@components/ui/textarea";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { messageSchema, MessageFormData } from "@lib/validation";
 import { useToast } from "@hooks/use-toast";
+
+import dynamic from "next/dynamic";
+
+const EditMessageDialog = dynamic(
+  async () => {
+    const mod = await import("@components/messages/EditMessageDialog");
+    return mod.EditMessageDialog;
+  },
+  { ssr: false }
+);
 
 export default function MessagesList() {
   const {
@@ -39,46 +36,15 @@ export default function MessagesList() {
   } = useGetMessagesQuery(undefined);
 
   const [deleteMessage] = useDeleteMessageMutation();
-  const [updateMessage] = useUpdateMessageMutation();
   const [openDialogId, setOpenDialogId] = useState<number | null>(null);
   const { toast } = useToast();
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm<MessageFormData>({
-    resolver: zodResolver(messageSchema),
-    defaultValues: { content: "" },
-  });
-
-  const onEdit = async (id: number, data: MessageFormData) => {
-    try {
-      await updateMessage({ id, content: data.content }).unwrap();
-      toast({
-        title: "Wiadomość zaktualizowana",
-        description: `Wiadomość o ID ${id} została zaktualizowana.`,
-      });
-      reset();
-      setOpenDialogId(null);
-      refetch();
-    } catch (err) {
-      console.error("Edit failed", err);
-      toast({
-        title: "Błąd",
-        description: "Nie udało się zaktualizować wiadomości.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleDelete = async (id: number) => {
     try {
       await deleteMessage(id).unwrap();
       toast({
         title: "Wiadomość usunięta",
-        description: `Wiadomość o ID ${id} została pomyślnie usunięta.`,
+        description: `Wiadomość o ID ${id} została usunięta.`,
       });
       refetch();
     } catch (err) {
@@ -91,11 +57,6 @@ export default function MessagesList() {
     }
   };
 
-  const handleOpenDialog = (id: number, currentContent: string) => {
-    setValue("content", currentContent);
-    setOpenDialogId(id);
-  };
-
   if (isLoading) {
     return (
       <div className="w-full py-10 flex justify-center items-center">
@@ -105,7 +66,7 @@ export default function MessagesList() {
   }
 
   if (error) return <p className="text-red-500">Error loading messages</p>;
-
+  const hasMessages = messages && messages.length > 0;
   return (
     <div className="p-4 w-full max-w-4xl mx-auto">
       <div className="w-full overflow-x-auto">
@@ -117,57 +78,46 @@ export default function MessagesList() {
               <TableHead>Akcje</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
-            {messages && messages.length > 0 ? (
+            {hasMessages ? (
               messages.map((msg) => (
-                <TableRow key={msg.id}>
-                  <TableCell>{msg.id}</TableCell>
-                  <TableCell className="break-words w-full">
+                <TableRow
+                  key={msg.id}
+                  className="flex flex-col sm:table-row w-full"
+                >
+                  <TableCell className="font-semibold text-sm sm:table-cell">
+                    {msg.id}
+                  </TableCell>
+                  <TableCell className="break-words text-pretty text-sm sm:table-cell">
                     {msg.content}
                   </TableCell>
-                  <TableCell className="space-x-2 whitespace-nowrap">
-                    <Dialog
-                      open={openDialogId === msg.id}
-                      onOpenChange={(open) => {
-                        if (open) {
-                          handleOpenDialog(msg.id, msg.content);
-                        } else {
-                          setOpenDialogId(null);
-                          reset();
-                        }
-                      }}
-                    >
-                      <DialogTrigger asChild>
-                        <Button variant="outline">Edytuj</Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Edytuj wiadomość</DialogTitle>
-                        </DialogHeader>
-                        <form
-                          onSubmit={handleSubmit((data) =>
-                            onEdit(msg.id, data)
-                          )}
-                          className="space-y-4"
-                        >
-                          <Textarea rows={4} {...register("content")} />
-                          {errors.content && (
-                            <p className="text-sm text-red-500">
-                              {errors.content.message}
-                            </p>
-                          )}
-                          <DialogFooter>
-                            <Button type="submit">Zapisz</Button>
-                          </DialogFooter>
-                        </form>
-                      </DialogContent>
-                    </Dialog>
-                    <Button
-                      variant="destructive"
-                      onClick={() => handleDelete(msg.id)}
-                    >
-                      Usuń
-                    </Button>
+                  <TableCell className="mt-2 sm:mt-0 sm:table-cell sm:whitespace-nowrap">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setOpenDialogId(msg.id)}
+                      >
+                        Edytuj
+                      </Button>
+                      {openDialogId === msg.id && (
+                        <EditMessageDialog
+                          id={msg.id}
+                          initialContent={msg.content}
+                          onCloseAction={() => setOpenDialogId(null)}
+                          onSuccessAction={() => {
+                            refetch();
+                            setOpenDialogId(null);
+                          }}
+                        />
+                      )}
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDelete(msg.id)}
+                      >
+                        Usuń
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
