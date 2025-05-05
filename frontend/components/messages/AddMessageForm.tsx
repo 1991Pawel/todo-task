@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { messageSchema, MessageFormData } from "@lib/validation";
 import { useToast } from "@hooks/use-toast";
+import { Send } from "lucide-react";
 export default function AddMessageForm() {
   const [addMessage, { isLoading }] = useAddMessageMutation();
   const { refetch } = useGetMessagesQuery(undefined);
@@ -49,7 +50,7 @@ export default function AddMessageForm() {
     <section className="flex justify-center  w-full">
       <Card className="w-full max-w-prose shadow-xl border border-muted bg-background">
         <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl font-semibold tracking-tight">
+          <CardTitle className="text-xl font-semibold tracking-tight">
             Dodaj wiadomość
           </CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -59,7 +60,7 @@ export default function AddMessageForm() {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Textarea
-              rows={5}
+              rows={1}
               placeholder="Wpisz wiadomość..."
               className="resize-none"
               {...register("content")}
@@ -67,9 +68,16 @@ export default function AddMessageForm() {
             {errors.content && (
               <p className="text-sm text-red-500">{errors.content.message}</p>
             )}
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Wysyłanie..." : "Wyślij"}
+            <div className="flex justify-center w-full">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="flex items-center gap-2 w-full"
+              >
+                <>
+                  <Send className="w-4 h-4" />
+                  Wyślij
+                </>
               </Button>
             </div>
           </form>
