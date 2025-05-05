@@ -10,7 +10,7 @@ import { Button } from "@components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { messageSchema, MessageFormData } from "@lib/validation";
-import { useToast } from "../app/hooks/use-toast";
+import { useToast } from "@hooks/use-toast";
 export default function AddMessageForm() {
   const [addMessage, { isLoading }] = useAddMessageMutation();
   const { refetch } = useGetMessagesQuery(undefined);

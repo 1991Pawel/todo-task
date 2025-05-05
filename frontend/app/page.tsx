@@ -1,5 +1,5 @@
-import MessagesList from "@components/MessagesList";
-import AddMessageForm from "@components/AddMessageForm";
+import MessagesList from "@components/messages/MessagesList";
+import AddMessageForm from "@components/messages/AddMessageForm";
 
 export default function Home() {
   return (

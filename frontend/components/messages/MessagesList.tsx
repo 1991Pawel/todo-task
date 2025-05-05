@@ -28,7 +28,7 @@ import { Textarea } from "@components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { messageSchema, MessageFormData } from "@lib/validation";
-import { useToast } from "../app/hooks/use-toast";
+import { useToast } from "@hooks/use-toast";
 
 export default function MessagesList() {
   const {
@@ -122,7 +122,7 @@ export default function MessagesList() {
               messages.map((msg) => (
                 <TableRow key={msg.id}>
                   <TableCell>{msg.id}</TableCell>
-                  <TableCell className="break-words max-w-[250px]">
+                  <TableCell className="break-words w-full">
                     {msg.content}
                   </TableCell>
                   <TableCell className="space-x-2 whitespace-nowrap">
