@@ -2,6 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import { config } from "dotenv";
 import sequelize from "./utils/database.js";
+import cors from "cors";
 
 import messagesRoutes from "./routes/messages.routes.js";
 import errorMiddleware from "./middleware/error.middleware.js";
@@ -10,6 +11,7 @@ config();
 const app = express();
 
 // Middleware
+app.use(cors());
 app.use(bodyParser.json());
 
 // Routes
