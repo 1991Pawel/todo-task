@@ -3,29 +3,27 @@ import bodyParser from "body-parser";
 import { config } from "dotenv";
 import sequelize from "./utils/database.js";
 
-// Initialize environment variables
-config();
+import messagesRoutes from "./routes/messages.routes.js";
+import errorMiddleware from "./middleware/error.middleware.js";
 
+config();
 const app = express();
 
 // Middleware
 app.use(bodyParser.json());
 
-// Root route
+// Routes
+app.use("/messages", messagesRoutes);
+
+// Root
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Interview task" });
 });
 
-// Global Error Handling Middleware
-app.use((error, req, res, next) => {
-  const status = error.statusCode || 500;
-  const message = error.message;
-  const data = error.data;
+// Error handling
+app.use(errorMiddleware);
 
-  res.status(status).json({ success: false, message: message, data: data });
-});
-
-// DB Connection
+// DB init
 sequelize
   .sync({ alter: true })
   .then(() => {
@@ -35,5 +33,5 @@ sequelize
     });
   })
   .catch((error) => {
-    console.error("Unable to connect to the database: ", error);
+    console.error("Unable to connect to the database:", error);
   });
