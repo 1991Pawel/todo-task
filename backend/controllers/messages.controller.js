@@ -1,8 +1,8 @@
-import Message from "../models/message.model.js";
+import * as service from "../services/message.services.js";
 
 export const getMessages = async (req, res, next) => {
   try {
-    const messages = await Message.findAll({ order: [["id", "DESC"]] });
+    const messages = await service.listMessages();
     res.json(messages);
   } catch (err) {
     next(err);
@@ -11,9 +11,8 @@ export const getMessages = async (req, res, next) => {
 
 export const createMessage = async (req, res, next) => {
   try {
-    const { content } = req.body;
-    const newMsg = await Message.create({ content });
-    res.status(201).json(newMsg);
+    const msg = await service.addMessage(req.body.content);
+    res.status(201).json(msg);
   } catch (err) {
     next(err);
   }
@@ -21,26 +20,22 @@ export const createMessage = async (req, res, next) => {
 
 export const updateMessage = async (req, res, next) => {
   try {
-    const { content } = req.body;
-    const msg = await Message.findByPk(req.params.id);
-    if (!msg) return res.status(404).json({ error: "Message not found" });
-
-    msg.content = content;
-    await msg.save();
+    const msg = await service.editMessage(req.params.id, req.body.content);
     res.json(msg);
   } catch (err) {
+    if (err.message === "Message not found")
+      return res.status(404).json({ error: err.message });
     next(err);
   }
 };
 
 export const deleteMessage = async (req, res, next) => {
   try {
-    const msg = await Message.findByPk(req.params.id);
-    if (!msg) return res.status(404).json({ error: "Message not found" });
-
-    await msg.destroy();
+    await service.deleteMessage(req.params.id);
     res.sendStatus(204);
   } catch (err) {
+    if (err.message === "Message not found")
+      return res.status(404).json({ error: err.message });
     next(err);
   }
 };
